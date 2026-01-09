@@ -93,6 +93,61 @@
             width: 120px;
         }
 
+        .lang-switch {
+            position: relative;
+            margin-left: 1rem;
+        }
+
+        .lang-btn {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .lang-btn:hover {
+            color: var(--text-main);
+            border-color: var(--text-muted);
+        }
+
+        .lang-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-top: 0.5rem;
+            width: 150px;
+            display: none;
+            flex-direction: column;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+        }
+
+        .lang-menu.show {
+            display: flex;
+        }
+
+        .lang-item {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .lang-item:hover {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--text-main);
+        }
+
         /* Main Layout */
         main {
             flex: 1;
@@ -362,7 +417,24 @@
     <div class="connection-status">
         <div>
             <i class="fa-solid fa-users"></i>
-            <span id="peer-count">1</span> 人在線
+            <span id="peer-count">1</span> <span data-i18n="online">人在線</span>
+        </div>
+        <div class="lang-switch">
+            <button class="lang-btn" onclick="toggleLangMenu()">
+                <i class="fa-solid fa-globe"></i> <span id="current-lang">繁體中文</span>
+            </button>
+            <div class="lang-menu" id="lang-menu">
+                <div class="lang-item" onclick="setLanguage('zh-TW')">繁體中文</div>
+                <div class="lang-item" onclick="setLanguage('zh-CN')">简体中文</div>
+                <div class="lang-item" onclick="setLanguage('en')">English</div>
+                <div class="lang-item" onclick="setLanguage('ja')">日本語</div>
+                <div class="lang-item" onclick="setLanguage('ko')">한국어</div>
+                <div class="lang-item" onclick="setLanguage('es')">Español</div>
+                <div class="lang-item" onclick="setLanguage('fr')">Français</div>
+                <div class="lang-item" onclick="setLanguage('de')">Deutsch</div>
+                <div class="lang-item" onclick="setLanguage('ru')">Русский</div>
+                <div class="lang-item" onclick="setLanguage('pt')">Português</div>
+            </div>
         </div>
     </div>
 </header>
@@ -453,6 +525,321 @@
 </div>
 
 <script>
+    // --- I18n ---
+    const i18n = {
+        'zh-TW': {
+            online: '人在線',
+            dropTitle: '拖放檔案至此',
+            dropSub: '檔案僅暫存於記憶體，關閉即刪除',
+            publicMode: '公開模式',
+            privateMode: '私密模式',
+            unlockPwd: '解鎖密碼',
+            unlockPwdPlace: '設定一組密碼...',
+            fileDesc: '檔案說明',
+            fileDescPlace: '輸入檔案描述...',
+            shareBtn: '開始分享',
+            listTitle: '在線檔案列表',
+            colName: '名稱',
+            colDesc: '說明',
+            colSize: '大小',
+            colTime: '時間',
+            colAction: '操作',
+            emptyList: '尚無檔案分享，請上傳或等待他人分享...',
+            modalTitle: '解鎖檔案',
+            modalDesc: '此檔案已加密，請輸入密碼以檢視內容並下載。',
+            modalPlace: '輸入密碼...',
+            cancel: '取消',
+            unlock: '解鎖並下載',
+            request: '請求中...'
+        },
+        'zh-CN': {
+            online: '人在线',
+            dropTitle: '拖放文件至此',
+            dropSub: '文件仅暂存于内存，关闭即删除',
+            publicMode: '公开模式',
+            privateMode: '私密模式',
+            unlockPwd: '解锁密码',
+            unlockPwdPlace: '设置一组密码...',
+            fileDesc: '文件说明',
+            fileDescPlace: '输入文件描述...',
+            shareBtn: '开始分享',
+            listTitle: '在线文件列表',
+            colName: '名称',
+            colDesc: '说明',
+            colSize: '大小',
+            colTime: '时间',
+            colAction: '操作',
+            emptyList: '尚无文件分享，请上传或等待他人分享...',
+            modalTitle: '解锁文件',
+            modalDesc: '此文件已加密，请输入密码以查看内容并下载。',
+            modalPlace: '输入密码...',
+            cancel: '取消',
+            unlock: '解锁并下载',
+            request: '请求中...'
+        },
+        'en': {
+            online: 'Online',
+            dropTitle: 'Drag & Drop Files Here',
+            dropSub: 'Files stored in RAM only, deleted on close',
+            publicMode: 'Public Mode',
+            privateMode: 'Private Mode',
+            unlockPwd: 'Unlock Password',
+            unlockPwdPlace: 'Set a password...',
+            fileDesc: 'File Description',
+            fileDescPlace: 'Enter file description...',
+            shareBtn: 'Start Sharing',
+            listTitle: 'Online File List',
+            colName: 'Name',
+            colDesc: 'Description',
+            colSize: 'Size',
+            colTime: 'Time',
+            colAction: 'Action',
+            emptyList: 'No files shared yet, upload or wait...',
+            modalTitle: 'Unlock File',
+            modalDesc: 'This file is encrypted. Enter password to view and download.',
+            modalPlace: 'Enter password...',
+            cancel: 'Cancel',
+            unlock: 'Unlock & Download',
+            request: 'Requesting...'
+        },
+        'ja': {
+            online: 'オンライン',
+            dropTitle: 'ファイルをここにドロップ',
+            dropSub: 'ファイルはRAMのみに保存され、閉じると削除されます',
+            publicMode: '公開モード',
+            privateMode: 'プライベートモード',
+            unlockPwd: '解除パスワード',
+            unlockPwdPlace: 'パスワードを設定...',
+            fileDesc: 'ファイル説明',
+            fileDescPlace: 'ファイルの説明を入力...',
+            shareBtn: '共有を開始',
+            listTitle: 'オンラインファイルリスト',
+            colName: '名前',
+            colDesc: '説明',
+            colSize: 'サイズ',
+            colTime: '時間',
+            colAction: '操作',
+            emptyList: '共有ファイルはありません...',
+            modalTitle: 'ファイルのロック解除',
+            modalDesc: 'このファイルは暗号化されています。パスワードを入力してください。',
+            modalPlace: 'パスワードを入力...',
+            cancel: 'キャンセル',
+            unlock: '解除してダウンロード',
+            request: 'リクエスト中...'
+        },
+        'ko': {
+            online: '명 접속 중',
+            dropTitle: '파일을 여기로 드래그',
+            dropSub: '파일은 RAM에만 저장되며 닫으면 삭제됩니다',
+            publicMode: '공개 모드',
+            privateMode: '비공개 모드',
+            unlockPwd: '잠금 해제 비밀번호',
+            unlockPwdPlace: '비밀번호 설정...',
+            fileDesc: '파일 설명',
+            fileDescPlace: '파일 설명 입력...',
+            shareBtn: '공유 시작',
+            listTitle: '온라인 파일 목록',
+            colName: '이름',
+            colDesc: '설명',
+            colSize: '크기',
+            colTime: '시간',
+            colAction: '작업',
+            emptyList: '공유된 파일이 없습니다...',
+            modalTitle: '파일 잠금 해제',
+            modalDesc: '이 파일은 암호화되었습니다. 다운로드하려면 비밀번호를 입력하세요.',
+            modalPlace: '비밀번호 입력...',
+            cancel: '취소',
+            unlock: '해제 및 다운로드',
+            request: '요청 중...'
+        },
+        'es': {
+            online: 'En línea',
+            dropTitle: 'Arrastra archivos aquí',
+            dropSub: 'Archivos en RAM, se borran al cerrar',
+            publicMode: 'Modo Público',
+            privateMode: 'Modo Privado',
+            unlockPwd: 'Contraseña',
+            unlockPwdPlace: 'Establecer contraseña...',
+            fileDesc: 'Descripción',
+            fileDescPlace: 'Ingresa descripción...',
+            shareBtn: 'Compartir',
+            listTitle: 'Lista de Archivos',
+            colName: 'Nombre',
+            colDesc: 'Descripción',
+            colSize: 'Tamaño',
+            colTime: 'Hora',
+            colAction: 'Acción',
+            emptyList: 'No hay archivos compartidos...',
+            modalTitle: 'Desbloquear Archivo',
+            modalDesc: 'Archivo encriptado. Ingresa contraseña para descargar.',
+            modalPlace: 'Ingresa contraseña...',
+            cancel: 'Cancelar',
+            unlock: 'Desbloquear',
+            request: 'Solicitando...'
+        },
+        'fr': {
+            online: 'En ligne',
+            dropTitle: 'Glisser-déposer ici',
+            dropSub: 'Fichiers en RAM, supprimés à la fermeture',
+            publicMode: 'Mode Public',
+            privateMode: 'Mode Privé',
+            unlockPwd: 'Mot de passe',
+            unlockPwdPlace: 'Définir un mot de passe...',
+            fileDesc: 'Description',
+            fileDescPlace: 'Entrez la description...',
+            shareBtn: 'Partager',
+            listTitle: 'Liste des Fichiers',
+            colName: 'Nom',
+            colDesc: 'Description',
+            colSize: 'Taille',
+            colTime: 'Heure',
+            colAction: 'Action',
+            emptyList: 'Aucun fichier partagé...',
+            modalTitle: 'Déverrouiller',
+            modalDesc: 'Fichier chiffré. Entrez le mot de passe.',
+            modalPlace: 'Entrez le mot de passe...',
+            cancel: 'Annuler',
+            unlock: 'Déverrouiller',
+            request: 'Demande en cours...'
+        },
+        'de': {
+            online: 'Online',
+            dropTitle: 'Dateien hierher ziehen',
+            dropSub: 'Dateien nur im RAM, beim Schließen gelöscht',
+            publicMode: 'Öffentlicher Modus',
+            privateMode: 'Privater Modus',
+            unlockPwd: 'Passwort',
+            unlockPwdPlace: 'Passwort festlegen...',
+            fileDesc: 'Beschreibung',
+            fileDescPlace: 'Beschreibung eingeben...',
+            shareBtn: 'Teilen',
+            listTitle: 'Dateiliste',
+            colName: 'Name',
+            colDesc: 'Beschreibung',
+            colSize: 'Größe',
+            colTime: 'Zeit',
+            colAction: 'Aktion',
+            emptyList: 'Keine Dateien geteilt...',
+            modalTitle: 'Datei entsperren',
+            modalDesc: 'Datei verschlüsselt. Passwort eingeben.',
+            modalPlace: 'Passwort eingeben...',
+            cancel: 'Abbrechen',
+            unlock: 'Entsperren',
+            request: 'Anfragen...'
+        },
+        'ru': {
+            online: 'Онлайн',
+            dropTitle: 'Перетащите файлы сюда',
+            dropSub: 'Файлы только в RAM, удаляются при закрытии',
+            publicMode: 'Публичный',
+            privateMode: 'Приватный',
+            unlockPwd: 'Пароль',
+            unlockPwdPlace: 'Установите пароль...',
+            fileDesc: 'Описание',
+            fileDescPlace: 'Введите описание...',
+            shareBtn: 'Поделиться',
+            listTitle: 'Список файлов',
+            colName: 'Имя',
+            colDesc: 'Описание',
+            colSize: 'Размер',
+            colTime: 'Время',
+            colAction: 'Действие',
+            emptyList: 'Нет общих файлов...',
+            modalTitle: 'Разблокировать',
+            modalDesc: 'Файл зашифрован. Введите пароль.',
+            modalPlace: 'Введите пароль...',
+            cancel: 'Отмена',
+            unlock: 'Скачать',
+            request: 'Запрос...'
+        },
+        'pt': {
+            online: 'Online',
+            dropTitle: 'Arraste arquivos aqui',
+            dropSub: 'Arquivos na RAM, apagados ao fechar',
+            publicMode: 'Modo Público',
+            privateMode: 'Modo Privado',
+            unlockPwd: 'Senha',
+            unlockPwdPlace: 'Definir senha...',
+            fileDesc: 'Descrição',
+            fileDescPlace: 'Digite a descrição...',
+            shareBtn: 'Compartilhar',
+            listTitle: 'Lista de Arquivos',
+            colName: 'Nome',
+            colDesc: 'Descrição',
+            colSize: 'Tamanho',
+            colTime: 'Hora',
+            colAction: 'Ação',
+            emptyList: 'Nenhum arquivo compartilhado...',
+            modalTitle: 'Desbloquear Arquivo',
+            modalDesc: 'Arquivo criptografado. Digite a senha.',
+            modalPlace: 'Digite a senha...',
+            cancel: 'Cancelar',
+            unlock: 'Desbloquear',
+            request: 'Solicitando...'
+        }
+    };
+
+    let currentLang = 'zh-TW';
+
+    function toggleLangMenu() {
+        document.getElementById('lang-menu').classList.toggle('show');
+    }
+
+    function setLanguage(lang) {
+        currentLang = lang;
+        const texts = i18n[lang];
+        
+        // Update UI texts
+        document.querySelector('[data-i18n="online"]').textContent = texts.online;
+        document.querySelector('#drop-zone h3').textContent = texts.dropTitle;
+        document.querySelector('#drop-zone p').textContent = texts.dropSub;
+        document.querySelector('.mode-btn.public').childNodes[2].textContent = ' ' + texts.publicMode;
+        document.querySelector('.mode-btn.private').childNodes[2].textContent = ' ' + texts.privateMode;
+        document.querySelector('#password-group label').textContent = texts.unlockPwd;
+        document.querySelector('#file-password').placeholder = texts.unlockPwdPlace;
+        document.querySelector('.form-group label:not(#password-group label)').textContent = texts.fileDesc;
+        document.querySelector('#file-desc').placeholder = texts.fileDescPlace;
+        document.querySelector('.btn-share').childNodes[2].textContent = ' ' + texts.shareBtn;
+        
+        document.querySelector('.file-list-section h2').childNodes[2].textContent = ' ' + texts.listTitle;
+        document.querySelector('.col-name').textContent = texts.colName;
+        document.querySelector('.col-desc').textContent = texts.colDesc;
+        document.querySelector('.col-size').textContent = texts.colSize;
+        document.querySelector('.col-date').textContent = texts.colTime;
+        document.querySelector('.col-action').textContent = texts.colAction;
+        
+        const emptyRow = document.querySelector('#file-list-body tr td[colspan="6"]');
+        if (emptyRow) emptyRow.textContent = texts.emptyList;
+
+        document.querySelector('.modal h3').childNodes[2].textContent = ' ' + texts.modalTitle;
+        document.querySelector('.modal p').textContent = texts.modalDesc;
+        document.querySelector('#unlock-password').placeholder = texts.modalPlace;
+        document.querySelector('.btn-cancel').textContent = texts.cancel;
+        document.querySelector('.btn-unlock').textContent = texts.unlock;
+
+        // Update button label
+        const langNames = {
+            'zh-TW': '繁體中文', 'zh-CN': '简体中文', 'en': 'English',
+            'ja': '日本語', 'ko': '한국어', 'es': 'Español',
+            'fr': 'Français', 'de': 'Deutsch', 'ru': 'Русский', 'pt': 'Português'
+        };
+        document.getElementById('current-lang').textContent = langNames[lang];
+        document.getElementById('lang-menu').classList.remove('show');
+    }
+
+    // Close menu when clicking outside
+    window.onclick = function(event) {
+        if (!event.target.matches('.lang-btn') && !event.target.matches('.lang-btn *')) {
+            var dropdowns = document.getElementsByClassName("lang-menu");
+            for (var i = 0; i < dropdowns.length; i++) {
+                var openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+        }
+    }
+
     // --- State Management ---
     const state = {
         myId: null,
