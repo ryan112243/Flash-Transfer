@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -400,111 +400,7 @@
             cursor: pointer;
         }
 
-        /* Chat Section */
-        .chat-section {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 1.5rem;
-            border: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            height: 400px;
-        }
-
-        .chat-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .chat-header h2 {
-            font-size: 1.25rem;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1rem;
-            background: rgba(15, 23, 42, 0.5);
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .message {
-            max-width: 80%;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            word-break: break-word;
-            position: relative;
-        }
-
-        .message.sent {
-            align-self: flex-end;
-            background: var(--primary);
-            color: white;
-            border-bottom-right-radius: 2px;
-        }
-
-        .message.received {
-            align-self: flex-start;
-            background: var(--border);
-            color: var(--text-main);
-            border-bottom-left-radius: 2px;
-        }
-        
-        .message.system {
-            align-self: center;
-            background: rgba(255, 255, 255, 0.1);
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            border-radius: 99px;
-            padding: 0.25rem 1rem;
-        }
-
-        .message .meta {
-            font-size: 0.7rem;
-            opacity: 0.7;
-            margin-top: 0.25rem;
-            text-align: right;
-        }
-
-        .chat-input-area {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .chat-input-area input {
-            flex: 1;
-        }
-        
-        .btn-save-chat {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-muted);
-            padding: 0.25rem 0.75rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.2s;
-        }
-        
-        .btn-save-chat:hover {
-            color: var(--text-main);
-            border-color: var(--text-muted);
-        }
-
-        /* Utils */
+    /* Utils */
         .hidden { display: none !important; }
         .text-gold { color: var(--private-gold); }
         .text-blue { color: var(--primary); }
@@ -612,24 +508,7 @@
         </div>
     </div>
 
-    <!-- Chat Section -->
-    <div class="chat-section">
-        <div class="chat-header">
-            <h2><i class="fa-regular fa-comments"></i> <span data-i18n="chatTitle">聊天室</span></h2>
-            <button class="btn-save-chat" onclick="saveChatHistory()">
-                <i class="fa-solid fa-download"></i> <span data-i18n="saveChat">儲存紀錄</span>
-            </button>
-        </div>
-        <div class="chat-messages" id="chat-messages">
-            <div class="message system" data-i18n="chatWelcome">歡迎加入聊天室，訊息已加密。</div>
-        </div>
-        <div class="chat-input-area">
-            <input type="text" id="chat-input" data-i18n-ph="chatPlace" placeholder="輸入訊息..." onkeypress="handleChatKey(event)">
-            <button class="btn-share" style="margin:0; padding: 0.5rem 1rem;" onclick="sendChatMessage()">
-                <i class="fa-solid fa-paper-plane"></i>
-            </button>
-        </div>
-    </div>
+
 </main>
 
 <!-- Unlock Modal -->
@@ -676,10 +555,6 @@
             cancel: '取消',
             unlock: '解鎖並下載',
             request: '請求中...',
-            chatTitle: '聊天室',
-            saveChat: '儲存紀錄',
-            chatWelcome: '歡迎加入聊天室，訊息已加密。',
-            chatPlace: '輸入訊息...'
         },
         'zh-CN': {
             online: '人在线',
@@ -707,10 +582,6 @@
             cancel: '取消',
             unlock: '解锁并下载',
             request: '请求中...',
-            chatTitle: '聊天室',
-            saveChat: '保存记录',
-            chatWelcome: '欢迎加入聊天室，消息已加密。',
-            chatPlace: '输入消息...'
         },
         'en': {
             online: 'Online',
@@ -738,10 +609,6 @@
             cancel: 'Cancel',
             unlock: 'Unlock & Download',
             request: 'Requesting...',
-            chatTitle: 'Chat Room',
-            saveChat: 'Save History',
-            chatWelcome: 'Welcome to Chat, messages are encrypted.',
-            chatPlace: 'Type a message...'
         },
         'ja': {
             online: 'オンライン',
@@ -769,10 +636,6 @@
             cancel: 'キャンセル',
             unlock: '解除してダウンロード',
             request: 'リクエスト中...',
-            chatTitle: 'チャットルーム',
-            saveChat: '履歴を保存',
-            chatWelcome: 'チャットへようこそ、メッセージは暗号化されています。',
-            chatPlace: 'メッセージを入力...'
         },
         'ko': {
             online: '명 접속 중',
@@ -800,10 +663,6 @@
             cancel: '취소',
             unlock: '해제 및 다운로드',
             request: '요청 중...',
-            chatTitle: '채팅방',
-            saveChat: '기록 저장',
-            chatWelcome: '채팅에 오신 것을 환영합니다, 메시지는 암호화됩니다.',
-            chatPlace: '메시지 입력...'
         },
         'es': {
             online: 'En línea',
@@ -831,10 +690,6 @@
             cancel: 'Cancelar',
             unlock: 'Desbloquear',
             request: 'Solicitando...',
-            chatTitle: 'Sala de Chat',
-            saveChat: 'Guardar Historial',
-            chatWelcome: 'Bienvenido al chat, mensajes encriptados.',
-            chatPlace: 'Escribe un mensaje...'
         },
         'fr': {
             online: 'En ligne',
@@ -860,10 +715,6 @@
             cancel: 'Annuler',
             unlock: 'Déverrouiller',
             request: 'Demande en cours...',
-            chatTitle: 'Salle de Chat',
-            saveChat: 'Sauvegarder',
-            chatWelcome: 'Bienvenue sur le chat, messages cryptés.',
-            chatPlace: 'Tapez un message...'
         },
         'de': {
             online: 'Online',
@@ -889,10 +740,6 @@
             cancel: 'Abbrechen',
             unlock: 'Entsperren',
             request: 'Anfragen...',
-            chatTitle: 'Chatraum',
-            saveChat: 'Verlauf speichern',
-            chatWelcome: 'Willkommen im Chat, Nachrichten sind verschlüsselt.',
-            chatPlace: 'Nachricht eingeben...'
         },
         'ru': {
             online: 'Онлайн',
@@ -918,10 +765,6 @@
             cancel: 'Отмена',
             unlock: 'Скачать',
             request: 'Запрос...',
-            chatTitle: 'Чат',
-            saveChat: 'Сохранить историю',
-            chatWelcome: 'Добро пожаловать в чат, сообщения зашифрованы.',
-            chatPlace: 'Введите сообщение...'
         },
         'pt': {
             online: 'Online',
@@ -947,10 +790,6 @@
             cancel: 'Cancelar',
             unlock: 'Desbloquear',
             request: 'Solicitando...',
-            chatTitle: 'Sala de Chat',
-            saveChat: 'Salvar Histórico',
-            chatWelcome: 'Bem-vindo ao chat, mensagens criptografadas.',
-            chatPlace: 'Digite uma mensagem...'
         }
     };
 
@@ -1000,16 +839,6 @@
         document.querySelector('.btn-cancel').textContent = texts.cancel;
         document.querySelector('.btn-unlock').textContent = texts.unlock;
 
-        // Chat text updates
-        if(document.querySelector('[data-i18n="chatTitle"]'))
-            document.querySelector('[data-i18n="chatTitle"]').textContent = texts.chatTitle;
-        if(document.querySelector('[data-i18n="saveChat"]'))
-            document.querySelector('[data-i18n="saveChat"]').textContent = texts.saveChat;
-        if(document.querySelector('[data-i18n="chatWelcome"]'))
-            document.querySelector('[data-i18n="chatWelcome"]').textContent = texts.chatWelcome;
-        if(document.getElementById('chat-input'))
-            document.getElementById('chat-input').placeholder = texts.chatPlace;
-
         // Update button label
         const langNames = {
             'zh-TW': '繁體中文', 'zh-CN': '简体中文', 'en': 'English',
@@ -1045,7 +874,6 @@
         peers: {}, // { peerId: conn }
         files: [], // Array of file metadata objects
         myFiles: {}, // { fileId: { fileObj, metadata, password } }
-        chatHistory: [], // { sender, text, time, type }
         currentUploadMode: 'public',
         pendingUnlockId: null
     };
@@ -1132,10 +960,6 @@
         // console.log('Received data:', data.type, 'from', conn.peer);
         
         switch (data.type) {
-            case 'CHAT_MESSAGE':
-                receiveChatMessage(data, conn.peer);
-                break;
-
             case 'REQUEST_LIST':
                 sendFileList(conn);
                 break;
@@ -1554,84 +1378,6 @@
         } catch (e) {
             alert('密碼錯誤，解鎖失敗');
         }
-    }
-
-    // --- Chat Logic ---
-    function handleChatKey(e) {
-        if (e.key === 'Enter') sendChatMessage();
-    }
-
-    function sendChatMessage() {
-        const input = document.getElementById('chat-input');
-        const text = input.value.trim();
-        if (!text) return;
-
-        // Broadcast to all peers
-        const msgData = {
-            type: 'CHAT_MESSAGE',
-            text: text,
-            timestamp: Date.now()
-        };
-
-        Object.values(state.peers).forEach(conn => {
-            if (conn.open) conn.send(msgData);
-        });
-
-        // Add to local history
-        addChatMessage('Me', text, 'sent');
-        input.value = '';
-    }
-
-    function receiveChatMessage(data, peerId) {
-        addChatMessage(peerId, data.text, 'received');
-    }
-
-    function addChatMessage(sender, text, type) {
-        const msgObj = {
-            sender,
-            text,
-            time: new Date().toLocaleString(),
-            type
-        };
-        state.chatHistory.push(msgObj);
-
-        const chatBox = document.getElementById('chat-messages');
-        const div = document.createElement('div');
-        div.className = `message ${type}`;
-        
-        // Sanitize text
-        const safeText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        
-        div.innerHTML = `
-            ${safeText}
-            <div class="meta">${msgObj.time}</div>
-        `;
-        chatBox.appendChild(div);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    function saveChatHistory() {
-        if (state.chatHistory.length === 0) {
-            alert('尚無聊天紀錄');
-            return;
-        }
-
-        let content = "=== Flash Transfer Chat History ===\n\n";
-        state.chatHistory.forEach(msg => {
-            content += `[${msg.time}] ${msg.sender}: ${msg.text}\n`;
-        });
-
-        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `chat_history_${new Date().toISOString().slice(0,10)}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }, 100);
     }
 
     // --- Utils ---
