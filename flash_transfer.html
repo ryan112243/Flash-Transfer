@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>快閃傳輸 (Flash Transfer)</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --private-gold: #eab308;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --border: #334155;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--bg-card);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .brand {
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .brand i { color: var(--primary); }
+
+        .connection-status {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            align-items: center;
+        }
+
+        .status-pill {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .status-pill:hover {
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .join-box {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .join-box input {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            width: 120px;
+        }
+
+        /* Main Layout */
+        main {
+            flex: 1;
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            gap: 2rem;
+            grid-template-columns: 1fr;
+        }
+
+        /* Upload Section */
+        .upload-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 3rem 2rem;
+            text-align: center;
+            transition: all 0.2s;
+            cursor: pointer;
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        .drop-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .drop-zone i {
+            font-size: 3rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .upload-form {
+            margin-top: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            opacity: 0.5;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .upload-form.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        input[type="text"], input[type="password"] {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .mode-switch {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            background: var(--bg-dark);
+            color: var(--text-muted);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active.public {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .mode-btn.active.private {
+            background: rgba(234, 179, 8, 0.1);
+            border-color: var(--private-gold);
+            color: var(--private-gold);
+        }
+
+        .btn-share {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: background 0.2s;
+        }
+
+        .btn-share:hover { background: var(--primary-hover); }
+
+        /* File List - Windows Explorer Style */
+        .file-list-section h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .file-table-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        table.file-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        .file-table th {
+            background: rgba(15, 23, 42, 0.8);
+            padding: 10px 16px;
+            color: var(--text-muted);
+            font-weight: 500;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .file-table td {
+            padding: 10px 16px;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.3);
+            color: var(--text-main);
+            vertical-align: middle;
+        }
+
+        .file-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .file-table tr:hover {
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+
+        .col-icon { width: 30px; text-align: center; font-size: 1.2rem; }
+        .col-name { min-width: 200px; font-weight: 500; }
+        .col-desc { color: var(--text-muted); }
+        .col-size { width: 100px; color: var(--text-muted); font-family: monospace; }
+        .col-date { width: 150px; color: var(--text-muted); font-size: 0.85rem; }
+        .col-action { width: 120px; text-align: right; }
+
+        .file-row.private .col-name { color: var(--private-gold); }
+        .file-row.public .col-name { color: var(--primary); }
+        
+        /* Progress Bar in Table */
+        .table-progress {
+            height: 3px;
+            background: #334155;
+            width: 100%;
+            margin-top: 5px;
+            border-radius: 2px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .table-progress .bar {
+            height: 100%;
+            background: var(--success);
+            width: 0%;
+        }
+
+        .btn-download, .btn-unlock {
+            padding: 4px 10px;
+            font-size: 0.8rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .col-desc, .col-date { display: none; }
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal {
+            background: var(--bg-card);
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid var(--border);
+        }
+
+        .modal h3 { margin-top: 0; }
+        
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .btn-cancel {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        /* Utils */
+        .hidden { display: none !important; }
+        .text-gold { color: var(--private-gold); }
+        .text-blue { color: var(--primary); }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="brand">
+        <i class="fa-solid fa-bolt-lightning"></i>
+        Flash Transfer
+    </div>
+    <div class="connection-status">
+        <div>
+            <i class="fa-solid fa-users"></i>
+            <span id="peer-count">1</span> 人在線
+        </div>
+    </div>
+</header>
+
+<main>
+    <!-- Upload Section -->
+    <div class="upload-card">
+        <div class="drop-zone" id="drop-zone">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <h3>拖放檔案至此</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">檔案僅暫存於記憶體，關閉即刪除</p>
+            <input type="file" id="file-input" style="display: none">
+        </div>
+
+        <div class="upload-form" id="upload-form">
+            <div class="file-info-preview" style="display: flex; align-items: center; gap: 0.5rem; color: var(--success); font-size: 0.9rem; margin-bottom: 0.5rem;">
+                <i class="fa-solid fa-check-circle"></i>
+                <span id="selected-filename">filename.ext</span>
+                <span id="selected-filesize" style="color: var(--text-muted);">(0 MB)</span>
+            </div>
+
+            <div class="mode-switch">
+                <div class="mode-btn active public" onclick="setUploadMode('public')">
+                    <i class="fa-solid fa-globe"></i> 公開模式
+                </div>
+                <div class="mode-btn private" onclick="setUploadMode('private')">
+                    <i class="fa-solid fa-lock"></i> 私密模式
+                </div>
+            </div>
+
+            <div class="form-group" id="password-group" style="display: none;">
+                <label>解鎖密碼</label>
+                <input type="password" id="file-password" placeholder="設定一組密碼...">
+            </div>
+
+            <div class="form-group">
+                <label>檔案說明</label>
+                <input type="text" id="file-desc" placeholder="輸入檔案描述...">
+            </div>
+
+            <button class="btn-share" onclick="shareFile()">
+                <i class="fa-solid fa-paper-plane"></i> 開始分享
+            </button>
+        </div>
+    </div>
+
+    <!-- File List Section -->
+    <div class="file-list-section">
+        <h2><i class="fa-solid fa-list-ul"></i> 在線檔案列表</h2>
+        <div class="file-table-container">
+            <table class="file-table">
+                <thead>
+                    <tr>
+                        <th class="col-icon"></th>
+                        <th class="col-name">名稱</th>
+                        <th class="col-desc">說明</th>
+                        <th class="col-size">大小</th>
+                        <th class="col-date">時間</th>
+                        <th class="col-action">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="file-list-body">
+                    <!-- Rows will be injected here -->
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                            尚無檔案分享，請上傳或等待他人分享...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<!-- Unlock Modal -->
+<div class="modal-overlay" id="unlock-modal">
+    <div class="modal">
+        <h3><i class="fa-solid fa-key text-gold"></i> 解鎖檔案</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">此檔案已加密，請輸入密碼以檢視內容並下載。</p>
+        <div class="form-group">
+            <input type="password" id="unlock-password" placeholder="輸入密碼...">
+        </div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeModal()">取消</button>
+            <button class="btn-unlock" onclick="submitUnlock()">解鎖並下載</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- State Management ---
+    const state = {
+        myId: null,
+        peers: {}, // { peerId: conn }
+        files: [], // Array of file metadata objects
+        myFiles: {}, // { fileId: { fileObj, metadata, password } }
+        currentUploadMode: 'public',
+        pendingUnlockId: null
+    };
+
+    // --- PeerJS Setup ---
+    const peer = new Peer(null, {
+        debug: 2
+    });
+
+    peer.on('open', (id) => {
+        state.myId = id;
+        document.getElementById('my-peer-id').textContent = id;
+        console.log('My Peer ID:', id);
+    });
+
+    peer.on('connection', (conn) => {
+        handleConnection(conn);
+    });
+
+    peer.on('error', (err) => {
+        console.error(err);
+        alert('連線錯誤: ' + err.type);
+    });
+
+    // --- Connection Logic ---
+    function connectToPeer() {
+        const targetId = document.getElementById('target-peer-id').value.trim();
+        if (!targetId || targetId === state.myId) return;
+        
+        const conn = peer.connect(targetId);
+        handleConnection(conn);
+    }
+
+    function handleConnection(conn) {
+        if (state.peers[conn.peer]) return; // Already connected
+
+        state.peers[conn.peer] = conn;
+        updatePeerCount();
+
+        conn.on('open', () => {
+            console.log('Connected to:', conn.peer);
+            // Send my file list to new peer
+            sendFileList(conn);
+            // Request their list
+            conn.send({ type: 'REQUEST_LIST' });
+        });
+
+        conn.on('data', (data) => {
+            handleData(data, conn);
+        });
+
+        conn.on('close', () => {
+            delete state.peers[conn.peer];
+            updatePeerCount();
+            removeFilesFromPeer(conn.peer);
+        });
+    }
+
+    function updatePeerCount() {
+        const count = Object.keys(state.peers).length + 1; // +1 for self
+        document.getElementById('peer-count').textContent = count;
+    }
+
+    function sendFileList(conn) {
+        const myPublicFiles = Object.values(state.myFiles).map(f => f.metadata);
+        conn.send({ type: 'FILE_LIST', files: myPublicFiles });
+    }
+
+    function broadcastFileList() {
+        const myPublicFiles = Object.values(state.myFiles).map(f => f.metadata);
+        Object.values(state.peers).forEach(conn => {
+            if (conn.open) {
+                conn.send({ type: 'FILE_LIST', files: myPublicFiles });
+            }
+        });
+    }
+
+    function removeFilesFromPeer(peerId) {
+        state.files = state.files.filter(f => f.owner !== peerId);
+        renderFileList();
+    }
+
+    function handleData(data, conn) {
+        console.log('Received data:', data.type, 'from', conn.peer);
+        
+        switch (data.type) {
+            case 'REQUEST_LIST':
+                sendFileList(conn);
+                break;
+                
+            case 'FILE_LIST':
+                // Update files from this peer
+                // Remove old files from this peer first
+                state.files = state.files.filter(f => f.owner !== conn.peer);
+                // Add new files
+                state.files = [...state.files, ...data.files];
+                renderFileList();
+                break;
+
+            case 'REQUEST_DOWNLOAD':
+                handleDownloadRequest(data, conn);
+                break;
+
+            case 'FILE_CHUNK':
+                handleFileChunk(data);
+                break;
+                
+            case 'FILE_END':
+                handleFileEnd(data);
+                break;
+
+            case 'ERROR':
+                alert(data.message);
+                break;
+        }
+    }
+
+    // --- File Transfer Logic (Sender) ---
+    function handleDownloadRequest(data, conn) {
+        const { fileId, password } = data;
+        const fileRecord = state.myFiles[fileId];
+
+        if (!fileRecord) {
+            conn.send({ type: 'ERROR', message: '檔案已不存在' });
+            return;
+        }
+
+        if (fileRecord.metadata.isPrivate) {
+            if (password !== fileRecord.password) {
+                conn.send({ type: 'ERROR', message: '密碼錯誤' });
+                return;
+            }
+        }
+
+        // Start Sending
+        const file = fileRecord.fileObj;
+        const chunkSize = 16 * 1024;
+        let offset = 0;
+
+        // Send metadata confirmation
+        conn.send({ 
+            type: 'FILE_START', 
+            fileId: fileId,
+            name: fileRecord.metadata.isPrivate ? fileRecord.realName : fileRecord.metadata.name,
+            size: file.size,
+            mime: file.type
+        });
+
+        // Use a loop with backpressure check
+        const reader = new FileReader();
+        
+        const readSlice = (o) => {
+            const slice = file.slice(o, o + chunkSize);
+            reader.readAsArrayBuffer(slice);
+        };
+
+        reader.onload = (e) => {
+            const buffer = e.target.result;
+            
+            // Check bufferedAmount to avoid flooding
+            if (conn.dataChannel.bufferedAmount > 1024 * 1024) { // 1MB buffer limit
+                 setTimeout(() => {
+                     if(conn.open) {
+                         conn.send({ type: 'FILE_CHUNK', fileId, data: buffer });
+                         offset += buffer.byteLength;
+                         if (offset < file.size) readSlice(offset);
+                         else conn.send({ type: 'FILE_END', fileId });
+                     }
+                 }, 50);
+                 return;
+            }
+
+            conn.send({ type: 'FILE_CHUNK', fileId, data: buffer });
+            offset += buffer.byteLength;
+            if (offset < file.size) {
+                // readSlice(offset); // Standard loop
+                // Adding slight delay to prevent UI freeze on main thread if file is huge
+                setTimeout(() => readSlice(offset), 0); 
+            } else {
+                conn.send({ type: 'FILE_END', fileId });
+            }
+        };
+
+        readSlice(0);
+    }
+
+    // --- File Transfer Logic (Receiver) ---
+    const incomingFiles = {}; // { fileId: { buffer: [], received: 0, size: 0, name: '' } }
+
+    function requestDownload(fileId, password = null) {
+        const file = state.files.find(f => f.id === fileId);
+        if (!file) return;
+
+        const conn = state.peers[file.owner];
+        if (!conn) {
+            alert('擁有者已離線');
+            return;
+        }
+        
+        // Initialize progress UI
+        const row = document.getElementById(`row-${fileId}`);
+        const progressWrapper = row.querySelector('.table-progress');
+        const progressBar = row.querySelector('.bar');
+        const actionCell = row.querySelector('.col-action');
+        
+        progressWrapper.style.display = 'block';
+        // Optional: Change action button text or status
+        const originalBtn = actionCell.innerHTML;
+        actionCell.innerHTML = '<span style="font-size:0.8rem; color:var(--text-muted)">請求中...</span>';
+
+        // Initialize incoming tracking
+        incomingFiles[fileId] = {
+            buffer: [],
+            received: 0,
+            progressBar: progressBar,
+            actionCell: actionCell,
+            originalBtn: originalBtn,
+            progressWrapper: progressWrapper
+        };
+
+        conn.send({ type: 'REQUEST_DOWNLOAD', fileId, password });
+    }
+
+    // Override the previous switch case via extension
+    const originalHandleData = handleData;
+    handleData = (data, conn) => {
+        if (data.type === 'FILE_START') {
+             const { fileId, name, size, mime } = data;
+             if (incomingFiles[fileId]) {
+                 incomingFiles[fileId].size = size;
+                 incomingFiles[fileId].name = name;
+                 incomingFiles[fileId].mime = mime;
+                 incomingFiles[fileId].actionCell.innerHTML = '<span style="font-size:0.8rem; color:var(--primary)">接收中...</span>';
+             }
+             return;
+        }
+        originalHandleData(data, conn);
+    };
+
+    function handleFileChunk(data) {
+        const { fileId, data: chunk } = data;
+        const transfer = incomingFiles[fileId];
+        if (!transfer) return;
+
+        transfer.buffer.push(chunk);
+        transfer.received += chunk.byteLength;
+        
+        if (transfer.size > 0) {
+            const percent = (transfer.received / transfer.size) * 100;
+            transfer.progressBar.style.width = percent + '%';
+        }
+    }
+
+    function handleFileEnd(data) {
+        const { fileId } = data;
+        const transfer = incomingFiles[fileId];
+        if (!transfer) return;
+
+        transfer.actionCell.innerHTML = '<span style="font-size:0.8rem; color:var(--success)">完成</span>';
+        
+        const blob = new Blob(transfer.buffer, { type: transfer.mime });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = transfer.name;
+        document.body.appendChild(a);
+        a.click();
+        
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            transfer.progressWrapper.style.display = 'none';
+            transfer.actionCell.innerHTML = transfer.originalBtn; // Restore button
+            delete incomingFiles[fileId];
+        }, 2000);
+    }
+
+
+    // --- UI Interactions ---
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    let stagedFile = null;
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length) handleFileSelect(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length) handleFileSelect(e.target.files[0]);
+    });
+
+    function handleFileSelect(file) {
+        stagedFile = file;
+        document.getElementById('upload-form').classList.add('active');
+        document.getElementById('selected-filename').textContent = file.name;
+        document.getElementById('selected-filesize').textContent = `(${formatSize(file.size)})`;
+        // Pre-read into memory? 
+        // For performance, we keep the File object and read during send.
+        // But prompt says "Read into ArrayBuffer". 
+        // We will read it into ArrayBuffer when "Share" is clicked to strictly follow prompt "File read and stored in Browser Memory".
+    }
+
+    function setUploadMode(mode) {
+        state.currentUploadMode = mode;
+        document.querySelectorAll('.mode-btn').forEach(el => el.classList.remove('active'));
+        document.querySelector(`.mode-btn.${mode}`).classList.add('active');
+        
+        const pwGroup = document.getElementById('password-group');
+        if (mode === 'private') {
+            pwGroup.style.display = 'flex';
+        } else {
+            pwGroup.style.display = 'none';
+        }
+    }
+
+    async function shareFile() {
+        if (!stagedFile) return;
+
+        const desc = document.getElementById('file-desc').value || '無說明';
+        const password = document.getElementById('file-password').value;
+        
+        if (state.currentUploadMode === 'private' && !password) {
+            alert('私密模式請設定密碼');
+            return;
+        }
+
+        // Read file to memory now (as per requirement)
+        const arrayBuffer = await readFileToBuffer(stagedFile);
+        
+        // Construct Metadata
+        const fileId = generateId();
+        let metadata = {
+            id: fileId,
+            owner: state.myId,
+            size: stagedFile.size,
+            isPrivate: state.currentUploadMode === 'private',
+            timestamp: Date.now()
+        };
+
+        if (state.currentUploadMode === 'private') {
+            // E2EE: Encrypt Name and Desc
+            const encryptedName = CryptoJS.AES.encrypt(stagedFile.name, password).toString();
+            const encryptedDesc = CryptoJS.AES.encrypt(desc, password).toString();
+            
+            metadata.name = `🔒 私密加密檔案 #${fileId.substring(0,4)}`;
+            metadata.desc = '內容已加密，請解鎖查看。';
+            // Store encrypted payload in metadata? Or locally?
+            // We need to send the encrypted info so others can verify password by trying to decrypt?
+            // Actually, we can just send the encrypted strings as "payload".
+            // But wait, the list shows "Encrypted...". When unlocked, it shows real.
+            // So we send:
+            metadata.encryptedPayload = {
+                name: encryptedName,
+                desc: encryptedDesc
+            };
+        } else {
+            metadata.name = stagedFile.name;
+            metadata.desc = desc;
+        }
+
+        // Store locally
+        state.myFiles[fileId] = {
+            fileObj: new Blob([arrayBuffer], { type: stagedFile.type }), // Store in memory as Blob
+            metadata: metadata,
+            password: password,
+            realName: stagedFile.name,
+            realDesc: desc
+        };
+
+        // Reset UI
+        stagedFile = null;
+        document.getElementById('upload-form').classList.remove('active');
+        document.getElementById('file-desc').value = '';
+        document.getElementById('file-password').value = '';
+        document.getElementById('selected-filename').textContent = '';
+        
+        // Broadcast
+        broadcastFileList();
+        
+        // Add to my own view (merged list)
+        // state.files is for *remote* files mostly, but we can mix? 
+        // Let's keep local files separate in logic but merged in UI? 
+        // Or just push to state.files marked as 'mine'
+        state.files.push({ ...metadata, isMine: true });
+        renderFileList();
+    }
+
+    function readFileToBuffer(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
+    // --- Rendering ---
+    function renderFileList() {
+        const listBody = document.getElementById('file-list-body');
+        listBody.innerHTML = '';
+
+        if (state.files.length === 0) {
+            listBody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                        尚無檔案分享...
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        state.files.forEach(file => {
+            const isMine = file.isMine;
+            const row = document.createElement('tr');
+            row.className = `file-row ${file.isPrivate ? 'private' : 'public'}`;
+            row.id = `row-${file.id}`;
+            
+            const iconClass = file.isPrivate ? 'fa-lock' : 'fa-file';
+            
+            // Action Button Logic
+            let actionBtn = '';
+            if (isMine) {
+                actionBtn = `<span style="color:var(--text-muted); font-size:0.8rem">我分享的</span>`;
+            } else if (file.isPrivate) {
+                if (file.decrypted) {
+                    actionBtn = `<button class="btn-download" onclick="requestDownload('${file.id}', '${file.decrypted.password}')"><i class="fa-solid fa-download"></i> 下載</button>`;
+                } else {
+                    actionBtn = `<button class="btn-unlock" onclick="openUnlockModal('${file.id}')"><i class="fa-solid fa-key"></i> 解鎖</button>`;
+                }
+            } else {
+                actionBtn = `<button class="btn-download" onclick="requestDownload('${file.id}')"><i class="fa-solid fa-download"></i> 下載</button>`;
+            }
+
+            // Display Info Logic
+            let displayName = file.name;
+            let displayDesc = file.desc;
+            
+            if (file.decrypted) {
+                displayName = file.decrypted.name;
+                displayDesc = file.decrypted.desc;
+            }
+
+            row.innerHTML = `
+                <td class="col-icon"><i class="fa-solid ${iconClass}"></i></td>
+                <td class="col-name">
+                    ${displayName}
+                    <div class="table-progress"><div class="bar"></div></div>
+                </td>
+                <td class="col-desc">${displayDesc}</td>
+                <td class="col-size">${formatSize(file.size)}</td>
+                <td class="col-date">${new Date(file.timestamp).toLocaleTimeString()}</td>
+                <td class="col-action">${actionBtn}</td>
+            `;
+            listBody.appendChild(row);
+        });
+    }
+
+    // --- Unlock Logic ---
+    function openUnlockModal(fileId) {
+        state.pendingUnlockId = fileId;
+        document.getElementById('unlock-modal').style.display = 'flex';
+        document.getElementById('unlock-password').value = '';
+        document.getElementById('unlock-password').focus();
+    }
+
+    function closeModal() {
+        document.getElementById('unlock-modal').style.display = 'none';
+        state.pendingUnlockId = null;
+    }
+
+    function submitUnlock() {
+        const pwd = document.getElementById('unlock-password').value;
+        const fileId = state.pendingUnlockId;
+        const file = state.files.find(f => f.id === fileId);
+        
+        if (!file || !file.encryptedPayload) return;
+
+        try {
+            // Attempt Decrypt
+            const bytesName = CryptoJS.AES.decrypt(file.encryptedPayload.name, pwd);
+            const bytesDesc = CryptoJS.AES.decrypt(file.encryptedPayload.desc, pwd);
+            
+            const decryptedName = bytesName.toString(CryptoJS.enc.Utf8);
+            const decryptedDesc = bytesDesc.toString(CryptoJS.enc.Utf8);
+
+            if (!decryptedName) throw new Error('Decryption failed');
+
+            // Success
+            file.decrypted = {
+                name: decryptedName,
+                desc: decryptedDesc,
+                password: pwd
+            };
+            
+            renderFileList();
+            closeModal();
+
+        } catch (e) {
+            alert('密碼錯誤，解鎖失敗');
+        }
+    }
+
+    // --- Utils ---
+    function generateId() {
+        return Math.random().toString(36).substr(2, 9);
+    }
+
+    function formatSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function copyMyId() {
+        if (state.myId) {
+            navigator.clipboard.writeText(state.myId);
+            alert('已複製 ID: ' + state.myId);
+        }
+    }
+
+</script>
+</body>
+</html>
